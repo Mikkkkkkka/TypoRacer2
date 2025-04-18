@@ -37,7 +37,7 @@ func quoteIdHandler(string_id string, db *sql.DB, w http.ResponseWriter) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	quote, err := data.GetQuote(db, id)
+	quote, err := data.GetQuote(id, db)
 	if err != nil {
 		log.Fatal(err)
 		http.Error(w, "Forbidden", http.StatusForbidden)

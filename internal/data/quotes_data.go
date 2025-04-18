@@ -2,17 +2,17 @@ package data
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"math/rand/v2"
 
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
-func GetQuote(db *sql.DB, id int) (*model.Quote, error) {
+func GetQuote(id int, db *sql.DB) (*model.Quote, error) {
 	var quote model.Quote
 	err := db.QueryRow("SELECT * FROM quotes WHERE id=$1", id).Scan(&quote.Id, &quote.Text)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetQuote: %w", err)
 	}
 	return &quote, nil
 }
@@ -21,7 +21,7 @@ func GetRandomQuote(db *sql.DB) (*model.Quote, error) {
 	var quotesCount int
 	err := db.QueryRow("SELECT count(*) FROM quotes").Scan(&quotesCount)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRandomQuote.db.QueryRow: %w", err)
 	}
 
 	rows, err := db.Query("SELECT id FROM quotes")
@@ -30,21 +30,17 @@ func GetRandomQuote(db *sql.DB) (*model.Quote, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, errors.New("no quotes are in the database yet")
-	}
-
 	quoteIndex := rand.IntN(quotesCount)
-	for i := 0; i < quoteIndex && rows.Next(); i++ {
+	for i := 0; rows.Next() && i < quoteIndex; i++ {
 	}
 
 	var randomQuoteId int
 	err = rows.Scan(&randomQuoteId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRandomQuote.rows.Scan: %w", err)
 	}
 
-	return GetQuote(db, randomQuoteId)
+	return GetQuote(randomQuoteId, db)
 }
 
 func GetAllQuotes(db *sql.DB) (*[]model.Quote, error) {
@@ -58,7 +54,7 @@ func GetAllQuotes(db *sql.DB) (*[]model.Quote, error) {
 	for rows.Next() {
 		var quote model.Quote
 		if err = rows.Scan(&quote.Id, &quote.Text); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("GetAllQuotes.rows.Scan: %w", err)
 		}
 		quotes = append(quotes, quote)
 	}

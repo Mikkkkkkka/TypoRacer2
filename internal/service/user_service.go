@@ -22,11 +22,10 @@ func CalculateStats(user *model.User, db *sql.DB) (*model.UserStats, error) {
 		stats.Accuracy += play.Accuracy
 		quotesPlayed[play.QuoteId]++
 	}
-	plays_count := float32(len(*plays))
-	if plays_count != 0 {
-		stats.WordsPerMinute /= plays_count
-		stats.Consistency /= plays_count
-		stats.Accuracy /= plays_count
+	if playsCount := float32(len(*plays)); playsCount != 0 {
+		stats.WordsPerMinute /= playsCount
+		stats.Consistency /= playsCount
+		stats.Accuracy /= playsCount
 	}
 
 	keys := make([]int, 0, len(quotesPlayed))
