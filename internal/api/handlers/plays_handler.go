@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/Mikkkkkkka/typoracer/internal/data"
+	"github.com/Mikkkkkkka/typoracer/internal/service"
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
@@ -54,7 +55,7 @@ func playsGetByUserIdHandler(strUserId string, w http.ResponseWriter, r *http.Re
 }
 
 func playsPostHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	var payloadData model.Play
+	var payloadData model.PlayRecord
 
 	if err := json.NewDecoder(r.Body).Decode(&payloadData); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -62,7 +63,13 @@ func playsPostHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 	defer r.Body.Close()
 
-	if err := data.AddPlay(&payloadData, db); err != nil {
+	play, err := service.CalculatePlayResults(&payloadData, db)
+	if err != nil {
+		http.Error(w, "Invalid quote id", http.StatusBadRequest)
+		return
+	}
+
+	if err := data.AddPlay(play, db); err != nil {
 		log.Fatal(err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
