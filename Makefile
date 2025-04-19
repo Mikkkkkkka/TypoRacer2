@@ -20,6 +20,7 @@ client:
 
 run-server: server
 	@echo "Starting server..."
+	@echo "---------- $(SERVER_OUTPUT) ----------"
 	./$(SERVER_OUTPUT) --port=5431
 
 run-e2e: server client

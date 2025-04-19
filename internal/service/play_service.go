@@ -4,12 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
-	"strings"
+	"slices"
 	"time"
 
 	"github.com/Mikkkkkkka/typoracer/internal/data"
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 	"github.com/Mikkkkkkka/typoracer/pkg/utils"
+	"github.com/eiannone/keyboard"
 )
 
 func CalculatePlayResults(record *model.PlayRecord, db *sql.DB) (*model.Play, error) {
@@ -28,20 +29,20 @@ func CalculatePlayResults(record *model.PlayRecord, db *sql.DB) (*model.Play, er
 	return &play, nil
 }
 
-// FIXME: total remake needed
 func calculateWordsPerMinute(quote *model.Quote, record *model.PlayRecord) float32 {
-	durations := make([]time.Duration, len(record.KeyStream))
+	times := make([]time.Duration, len(record.KeyStream))
 	for _, v := range record.KeyStream {
-		durations = append(durations, v.ElapsedTime)
+		times = append(times, v.ElapsedTime)
 	}
-	return float32(len(strings.Split(string(quote.Text), " "))) / float32(time.Duration(utils.Sum(durations))) / float32(time.Minute)
+	totalTime := utils.Sum(times)
+	return float32(countWordsInInput(record)) / (float32(totalTime) / float32(time.Minute))
 }
 
 func calculateAccuracy(quote *model.Quote, record *model.PlayRecord) float32 {
 	mistakeCount := 0
 	text := []rune(quote.Text)
 	for i, j := 0, 0; i < len(quote.Text) && j < len(record.KeyStream); j++ {
-		if text[i] != record.KeyStream[j].KeyEvent.Rune {
+		if text[i] != record.KeyStream[j].KeyEvent.Rune || record.KeyStream[i].KeyEvent.Key != keyboard.KeyBackspace {
 			mistakeCount++
 			continue
 		}
@@ -53,16 +54,40 @@ func calculateAccuracy(quote *model.Quote, record *model.PlayRecord) float32 {
 	return 1.0 - float32(mistakeCount/len(quote.Text))
 }
 
-// FIXME: find out why perfect consistency results in returning 0
 func calculateConsistency(record *model.PlayRecord) float32 {
 	n := len(record.KeyStream)
-	durations := make([]time.Duration, n)
+	times := make([]time.Duration, n)
 	for _, v := range record.KeyStream {
-		durations = append(durations, v.ElapsedTime)
+		times = append(times, v.ElapsedTime)
 	}
-	averageDuration := time.Duration(math.Round(utils.Average(durations)))
-	for i, v := range durations {
-		durations[i] = averageDuration - v
+	averageTime := time.Duration(math.Round(utils.Average(times)))
+	for i, v := range times {
+		times[i] = averageTime - v
 	}
-	return (float32(utils.Sum(durations)) / float32(n-1)) / float32(n)
+	return 1.0 - (float32(utils.Sum(times))/float32(n-1))/float32(n)
+}
+
+func countWordsInInput(record *model.PlayRecord) int {
+	currentWord := 0
+	wordLengths := make([]int, 0, 20)
+	for _, keyPress := range record.KeyStream {
+		if keyPress.KeyEvent.Rune == ' ' {
+			wordLengths = append(wordLengths, currentWord)
+			currentWord = 0
+			continue
+		}
+		if keyPress.KeyEvent.Rune == 0 && keyPress.KeyEvent.Key == keyboard.KeyBackspace {
+			currentWord--
+			if currentWord < 0 {
+				currentWord = wordLengths[len(wordLengths)-1]
+				wordLengths = slices.Delete(wordLengths, len(wordLengths)-1, len(wordLengths))
+			}
+			continue
+		}
+		currentWord++
+	}
+	if currentWord != 0 {
+		wordLengths = append(wordLengths, currentWord)
+	}
+	return len(wordLengths)
 }
