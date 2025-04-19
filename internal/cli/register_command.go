@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Mikkkkkkka/typoracer/internal/config"
 	"github.com/Mikkkkkkka/typoracer/pkg/model/requests"
 	"github.com/Mikkkkkkka/typoracer/pkg/utils"
 )
 
-func Register() error {
+func Register(cfg *config.CliConfig) error {
 
 	var username, password string
 
@@ -25,7 +26,7 @@ func Register() error {
 		panic(err)
 	}
 
-	err := requestRegistration(username, password)
+	err := requestRegistration(username, password, cfg)
 	if err != nil {
 		return err
 	}
@@ -33,13 +34,13 @@ func Register() error {
 	return nil
 }
 
-func requestRegistration(username, password string) error {
+func requestRegistration(username, password string, cfg *config.CliConfig) error {
 
 	if username == "" || password == "" {
 		return errors.New("username or password is empty")
 	}
 
-	body := requests.RegistrationRequestBody{
+	body := requests.LoginInfo{
 		Username: username,
 		Password: password,
 	}
@@ -47,9 +48,7 @@ func requestRegistration(username, password string) error {
 
 	jsonBody, _ := json.Marshal(body)
 
-	// TODO: make server uri configurable from client
-	res, err := http.Post("http://localhost:8080/api/v1/register", "json", bytes.NewBuffer(jsonBody))
-	fmt.Println("Warning! using localhost:8080")
+	res, err := http.Post(cfg.Url()+"/api/v1/register", "json", bytes.NewBuffer(jsonBody))
 
 	if err != nil {
 		return err

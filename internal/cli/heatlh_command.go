@@ -3,10 +3,12 @@ package cli
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/Mikkkkkkka/typoracer/internal/config"
 )
 
-func Health() {
-	res, err := http.Get("http://localhost:8080/health") // TODO: make uri configurable from client
+func Health(cfg *config.CliConfig) {
+	res, err := http.Get(cfg.Url() + "/health")
 
 	if err != nil {
 		panic(err)
