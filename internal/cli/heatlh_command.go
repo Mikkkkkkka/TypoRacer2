@@ -8,7 +8,7 @@ import (
 )
 
 func Health(cfg *config.CliConfig) error {
-	res, err := http.Get(cfg.Url() + "/health")
+	res, err := http.Get(cfg.Url() + "health")
 
 	if err != nil {
 		return err
