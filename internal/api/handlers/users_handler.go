@@ -15,25 +15,29 @@ func UsersHandlerWithDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userId, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			log.Fatal(err)
 			http.Error(w, "Invalid user id format", http.StatusBadRequest)
+			log.Println(err)
 			return
 		}
 
 		user, err := data.GetUserWithoutTokenById(userId, db)
 		if err != nil {
-			log.Fatal(err)
 			http.Error(w, "User with id does not exist", http.StatusBadRequest)
+			log.Println(err)
 			return
 		}
 
 		stats, err := service.CalculateStats(user, db)
 		if err != nil {
-			log.Fatal(err)
 			http.Error(w, "Unexpected error", http.StatusInternalServerError)
+			log.Println(err)
 			return
 		}
 
-		json.NewEncoder(w).Encode(stats)
+		if err := json.NewEncoder(w).Encode(stats); err != nil {
+			http.Error(w, "Unexpected error", http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
 	}
 }

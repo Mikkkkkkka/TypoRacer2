@@ -20,7 +20,8 @@ func PlaysHandlerWithDB(db *sql.DB) http.HandlerFunc {
 		case http.MethodPost:
 			playsPostHandler(w, r, db)
 		default:
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			log.Println("Method not allowed for api/v1/plays")
 			return
 		}
 	}
@@ -35,23 +36,32 @@ func playsGetHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	plays, err := data.GetAllPlays(db)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
+		log.Println(err)
 		return
 	}
-	json.NewEncoder(w).Encode(plays)
+	if err := json.NewEncoder(w).Encode(plays); err != nil {
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
+		log.Println(err)
+	}
 }
 
 func playsGetByUserIdHandler(strUserId string, w http.ResponseWriter, db *sql.DB) {
 	userId, err := strconv.ParseUint(strUserId, 10, 32)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
+		log.Println(err)
 		return
 	}
 	plays, err := data.GetPlaysByUserId(uint(userId), db)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
+		log.Println(err)
 		return
 	}
-	json.NewEncoder(w).Encode(plays)
+	if err := json.NewEncoder(w).Encode(plays); err != nil {
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
+		log.Println(err)
+	}
 }
 
 func playsPostHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -59,6 +69,7 @@ func playsPostHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	if err := json.NewDecoder(r.Body).Decode(&payloadData); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 	defer r.Body.Close()
@@ -66,12 +77,13 @@ func playsPostHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	play, err := service.CalculatePlayResults(&payloadData, db)
 	if err != nil {
 		http.Error(w, "Invalid quote id", http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 
 	if err := data.AddPlay(play, db); err != nil {
-		log.Fatal(err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 }

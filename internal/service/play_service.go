@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"math"
 	"slices"
 	"time"
@@ -20,7 +21,7 @@ func CalculatePlayResults(record *model.PlayRecord, db *sql.DB) (*model.Play, er
 	}
 	quote, err := data.GetQuote(record.QuoteId, db)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, fmt.Errorf("CalculatePlayResults.data.GetQuote: %w", err)
 	}
 	play.WordsPerMinute = calculateWordsPerMinute(quote, record)

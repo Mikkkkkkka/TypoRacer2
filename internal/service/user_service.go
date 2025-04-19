@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"math/rand/v2"
 	"sort"
 	"time"
@@ -14,6 +15,7 @@ import (
 func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
 	user, err := data.GetUserWithoutTokenByUsername(username, db)
 	if err != nil {
+		log.Println(err)
 		return nil, fmt.Errorf("LoginUser: no user with username \"%s\"", username)
 	}
 
@@ -21,6 +23,7 @@ func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
 		token := generateToken()
 		expiration := time.Now().Add(15 * time.Minute)
 		if err = data.AddTokenToUser(token, expiration, user.Id, db); err == nil {
+			log.Println(err)
 			return data.GetUserById(user.Id, db)
 		}
 	}
@@ -31,9 +34,11 @@ func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
 func AuthorizeUser(token string, db *sql.DB) (*model.User, error) {
 	user, err := data.GetUserFromToken(token, db)
 	if err != nil {
+		log.Println(err)
 		return nil, fmt.Errorf("AuthorizeUser: no user with token")
 	}
 	if time.Now().After(user.TokenExpiration) {
+		log.Println("token has expired")
 		return nil, fmt.Errorf("AuthorizeUser: token has expired")
 	}
 	return user, nil
@@ -52,6 +57,7 @@ func generateToken() string {
 func CalculateStats(user *model.User, db *sql.DB) (*model.UserStats, error) {
 	plays, err := data.GetPlaysByUserId(user.Id, db)
 	if err != nil {
+		log.Println(err)
 		return nil, fmt.Errorf("CalculateStats: %w", err)
 	}
 	var stats model.UserStats

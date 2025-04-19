@@ -13,7 +13,8 @@ import (
 func QuotesHandlerWithDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			log.Println("Method not allowed for api/v1/quotes")
 			return
 		}
 
@@ -35,36 +36,46 @@ func quoteIdHandler(string_id string, db *sql.DB, w http.ResponseWriter) {
 	id, err := strconv.ParseUint(string_id, 10, 32)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
+		log.Println(err)
 		return
 	}
 	quote, err := data.GetQuote(uint(id), db)
 	if err != nil {
-		log.Fatal(err)
 		http.Error(w, "Forbidden", http.StatusForbidden)
+		log.Println(err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(quote)
+	if err := json.NewEncoder(w).Encode(quote); err != nil {
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
+		log.Println(err)
+	}
 }
 
 func quoteRandomHandler(db *sql.DB, w http.ResponseWriter) {
 	quote, err := data.GetRandomQuote(db)
 	if err != nil {
-		log.Fatal(err)
 		http.Error(w, "Forbidden", http.StatusForbidden)
+		log.Println(err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(quote)
+	if err := json.NewEncoder(w).Encode(quote); err != nil {
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
+		log.Println(err)
+	}
 }
 
 func quoteAllHandler(db *sql.DB, w http.ResponseWriter) {
 	quotes, err := data.GetAllQuotes(db)
 	if err != nil {
-		log.Fatal(err)
 		http.Error(w, "Unexpected error", http.StatusInternalServerError)
+		log.Println(err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(quotes)
+	if err := json.NewEncoder(w).Encode(quotes); err != nil {
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
+		log.Println(err)
+	}
 }

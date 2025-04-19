@@ -14,14 +14,15 @@ func LoginHandlerWithDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			log.Println("Method not allowed for /api/v1/login")
 			return
 		}
 
 		var payloadData requests.LoginInfo
 
 		if err := json.NewDecoder(r.Body).Decode(&payloadData); err != nil {
-			log.Fatal(err)
 			http.Error(w, "Bad Request", http.StatusBadRequest)
+			log.Println(err)
 			return
 		}
 		defer r.Body.Close()
@@ -29,6 +30,7 @@ func LoginHandlerWithDB(db *sql.DB) http.HandlerFunc {
 		user, err := service.LoginUser(payloadData.Username, payloadData.Password, db)
 		if err != nil && err.Error() != "LoginUser: failed to generate token" {
 			http.Error(w, "Incorrect password or login", http.StatusBadRequest)
+			log.Println(err)
 			return
 		}
 

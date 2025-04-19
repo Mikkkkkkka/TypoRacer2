@@ -39,7 +39,7 @@ func main() {
 
 	db, err := data.ConnectDB(createConnectionString())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 		return
 	}
 	mux := api.NewRouter(db)
