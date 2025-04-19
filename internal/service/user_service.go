@@ -3,11 +3,51 @@ package service
 import (
 	"database/sql"
 	"fmt"
+	"math/rand/v2"
 	"sort"
+	"time"
 
 	"github.com/Mikkkkkkka/typoracer/internal/data"
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
+
+func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
+	user, err := data.GetUserWithoutTokenByUsername(username, db)
+	if err != nil {
+		return nil, fmt.Errorf("LoginUser: no user with username \"%s\"", username)
+	}
+
+	for range 5 {
+		token := generateToken()
+		expiration := time.Now().Add(15 * time.Minute)
+		if err = data.AddTokenToUser(token, expiration, user.Id, db); err == nil {
+			return data.GetUserById(user.Id, db)
+		}
+	}
+
+	return nil, fmt.Errorf("LoginUser: failed to generate token")
+}
+
+func AuthorizeUser(token string, db *sql.DB) (*model.User, error) {
+	user, err := data.GetUserFromToken(token, db)
+	if err != nil {
+		return nil, fmt.Errorf("AuthorizeUser: no user with token")
+	}
+	if time.Now().After(user.TokenExpiration) {
+		return nil, fmt.Errorf("AuthorizeUser: token has expired")
+	}
+	return user, nil
+}
+
+const tokenChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+func generateToken() string {
+	token := make([]byte, 20)
+	for i := range 20 {
+		token[i] = tokenChars[rand.IntN(len(tokenChars))]
+	}
+	return string(token)
+}
 
 func CalculateStats(user *model.User, db *sql.DB) (*model.UserStats, error) {
 	plays, err := data.GetPlaysByUserId(user.Id, db)

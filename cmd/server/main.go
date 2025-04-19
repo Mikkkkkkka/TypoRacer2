@@ -20,8 +20,8 @@ var (
 	db       string
 )
 
-func initialiseFlags() {
-	flag.StringVar(&host, "server", "localhost", "The adress of DB")
+func initializeFlags() {
+	flag.StringVar(&host, "server", "localhost", "The address of DB")
 	flag.StringVar(&port, "port", "5432", "The port of DB")
 	flag.StringVar(&user, "user", "postgres", "The user of DB to be logged in as")
 	flag.StringVar(&password, "password", "mysecretpassword", "The password of said user")
@@ -35,7 +35,7 @@ func createConnectionString() string {
 }
 
 func main() {
-	initialiseFlags()
+	initializeFlags()
 
 	db, err := data.ConnectDB(createConnectionString())
 	if err != nil {

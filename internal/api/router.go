@@ -21,6 +21,7 @@ func NewRouter(db *sql.DB) http.Handler {
 		w.WriteHeader(http.StatusOK)
 	})
 
+	mux.HandleFunc("/api/v1/login", injectDB(handlers.LoginHandlerWithDB, db))
 	mux.HandleFunc("/api/v1/register", injectDB(handlers.RegisterHandlerWithDB, db))
 	mux.HandleFunc("/api/v1/users/{id}", injectDB(handlers.UsersHandlerWithDB, db))
 	mux.HandleFunc("/api/v1/quotes", injectDB(handlers.QuotesHandlerWithDB, db))

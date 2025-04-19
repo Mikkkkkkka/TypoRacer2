@@ -29,7 +29,7 @@ func PlaysHandlerWithDB(db *sql.DB) http.HandlerFunc {
 func playsGetHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	strUserId := r.URL.Query().Get("user_id")
 	if strUserId != "" {
-		playsGetByUserIdHandler(strUserId, w, r, db)
+		playsGetByUserIdHandler(strUserId, w, db)
 		return
 	}
 	plays, err := data.GetAllPlays(db)
@@ -40,7 +40,7 @@ func playsGetHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	json.NewEncoder(w).Encode(plays)
 }
 
-func playsGetByUserIdHandler(strUserId string, w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func playsGetByUserIdHandler(strUserId string, w http.ResponseWriter, db *sql.DB) {
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)

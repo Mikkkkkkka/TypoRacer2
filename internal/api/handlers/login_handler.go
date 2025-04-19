@@ -6,11 +6,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Mikkkkkkka/typoracer/internal/data"
+	"github.com/Mikkkkkkka/typoracer/internal/service"
 	"github.com/Mikkkkkkka/typoracer/pkg/model/requests"
 )
 
-func RegisterHandlerWithDB(db *sql.DB) http.HandlerFunc {
+func LoginHandlerWithDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -26,9 +26,12 @@ func RegisterHandlerWithDB(db *sql.DB) http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
-		if err := data.AddUser(payloadData.Username, payloadData.Password, db); err != nil {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+		user, err := service.LoginUser(payloadData.Username, payloadData.Password, db)
+		if err != nil && err.Error() != "LoginUser: failed to generate token" {
+			http.Error(w, "Incorrect password or login", http.StatusBadRequest)
 			return
 		}
+
+		w.Header().Add("Authorization", "Bearer: "+user.Token)
 	}
 }

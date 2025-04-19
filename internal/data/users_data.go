@@ -2,35 +2,64 @@ package data
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
 func AddUser(username, password string, db *sql.DB) error {
-	if !areSecure(username, password) {
-		return errors.New("AddUser: username or password contain insecure characters")
+	if !isSecure(username) || !isSecure(password) {
+		return fmt.Errorf("AddUser: username or password contain insecure characters")
 	}
 	_, err := db.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", username, password)
-	return err
+	return fmt.Errorf("AddUser: %w", err)
 }
 
-func GetUserWithoutTokenById(userId int, db *sql.DB) (*model.User, error) {
+func GetUserById(userId int, db *sql.DB) (*model.User, error) {
 	var user model.User
-	err := db.QueryRow("SELECT id, username, password FROM users WHERE id=$1", userId).
-		Scan(&user.Id, &user.Username, &user.Password)
+	err := db.QueryRow("SELECT id, username, password, token, token_expiration FROM users WHERE id=$1", userId).
+		Scan(&user.Id, &user.Username, &user.Password, &user.Token, &user.TokenExpiration)
 	if err != nil {
-		return nil, fmt.Errorf("GetUserById: %w", err)
+		return nil, fmt.Errorf("GetUserById.db.QueryRow.Scan: %w", err)
 	}
 	return &user, nil
 }
 
+func GetUserWithoutTokenByUsername(username string, db *sql.DB) (*model.User, error) {
+	var user model.User
+	err := db.QueryRow("SELECT id, username, password FROM users WHERE username=$1", username).
+		Scan(&user.Id, &user.Username, &user.Password)
+	if err != nil {
+		return nil, fmt.Errorf("GetUserByUsername.db.QueryRow.Scan: %w", err)
+	}
+	return &user, nil
+}
+
+func GetUserFromToken(token string, db *sql.DB) (*model.User, error) {
+	if !isSecure(token) {
+		return nil, fmt.Errorf("GetUserFromToken: the provided token contains insecure characters")
+	}
+	var user model.User
+	err := db.QueryRow("SELECT id, username, password, token, token_expiration FROM users WHERE token=$1", token).
+		Scan(&user.Id, &user.Username, &user.Password, &user.Token, &user.TokenExpiration)
+	if err != nil {
+		return nil, fmt.Errorf("GetUserFromToken.db.QueryRow.Scan: %w", err)
+	}
+	return &user, nil
+}
+
+func AddTokenToUser(token string, datetime time.Time, userId int, db *sql.DB) error {
+	if !isSecure(token) {
+		return fmt.Errorf("AddTokenToUser: the generated token contains insecure characters")
+	}
+	_, err := db.Exec("UPDATE users SET token=$1, token_expiration=$2 WHERE id=$3", token, datetime, userId)
+	return err
+}
+
 // Attempting to prevent sql-injections
-func areSecure(username, password string) bool {
-	const potentiallyUnsafe string = ";\"[]() *"
-	var isUsernameSpoiled bool = strings.ContainsAny(username, potentiallyUnsafe)
-	var isPasswordSpoiled bool = strings.ContainsAny(password, potentiallyUnsafe)
-	return !(isUsernameSpoiled || isPasswordSpoiled)
+func isSecure(str string) bool {
+	const potentiallyUnsafe = ";\"[]() *"
+	return !strings.ContainsAny(str, potentiallyUnsafe)
 }
