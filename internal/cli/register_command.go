@@ -31,6 +31,7 @@ func Register(cfg *config.CliConfig) error {
 		return err
 	}
 
+	fmt.Printf("User \"%s\" was registered successfully!\n", username)
 	return nil
 }
 
@@ -48,8 +49,7 @@ func requestRegistration(username, password string, cfg *config.CliConfig) error
 
 	jsonBody, _ := json.Marshal(body)
 
-	res, err := http.Post(cfg.Url()+"/api/v1/register", "json", bytes.NewBuffer(jsonBody))
-
+	res, err := http.Post(cfg.Url()+"api/v1/register", "json", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return err
 	}
@@ -58,6 +58,5 @@ func requestRegistration(username, password string, cfg *config.CliConfig) error
 		return fmt.Errorf("unexpected response code: %s", res.Status)
 	}
 
-	fmt.Printf("User \"%s\" was registered successfully!\n", username)
 	return nil
 }

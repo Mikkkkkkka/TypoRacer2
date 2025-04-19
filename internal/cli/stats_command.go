@@ -15,7 +15,7 @@ func Stats(cfg *config.CliConfig) error {
 	fmt.Print("Enter UserId: ")
 	fmt.Scan(&userId)
 
-	resp, err := http.Get(cfg.Url() + "/api/v1/users/" + fmt.Sprintf("%d", userId))
+	resp, err := http.Get(cfg.Url() + "api/v1/users/" + fmt.Sprintf("%d", userId))
 	if err != nil {
 		return fmt.Errorf("Stats.http.Get: %w", err)
 	}

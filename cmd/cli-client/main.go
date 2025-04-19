@@ -53,11 +53,11 @@ func main() {
 	var err error
 	switch command {
 	case "health":
-		cli.Health(cfg)
+		err = cli.Health(cfg)
 	case "play":
-		panic("Not implemented!") // TODO: implement typing
+		err = cli.Play(cfg)
 	case "stats":
-		cli.Stats(cfg)
+		err = cli.Stats(cfg)
 	case "register":
 		err = cli.Register(cfg)
 	default:
