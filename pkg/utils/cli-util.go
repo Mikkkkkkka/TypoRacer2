@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -24,7 +23,7 @@ func ScanSecret(secret *string) error {
 			return err
 		}
 		if key == keyboard.KeyCtrlC || key == keyboard.KeyEsc {
-			return errors.New("escaped")
+			return fmt.Errorf("escaped")
 		}
 		if key == keyboard.KeyEnter {
 			break
@@ -32,7 +31,6 @@ func ScanSecret(secret *string) error {
 		if char == 0 {
 			continue
 		}
-		fmt.Print("*")
 		builder.WriteRune(char)
 	}
 
