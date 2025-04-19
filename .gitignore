@@ -30,3 +30,4 @@ go.work.sum
 *.log
 mklogs/
 bin/
+/config.json

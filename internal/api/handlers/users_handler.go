@@ -20,7 +20,7 @@ func UsersHandlerWithDB(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		user, err := data.GetUserById(userId, db)
+		user, err := data.GetUserWithoutTokenById(userId, db)
 		if err != nil {
 			log.Fatal(err)
 			http.Error(w, "User with id does not exist", http.StatusBadRequest)
