@@ -45,7 +45,6 @@ func quoteIdHandler(string_id string, db *sql.DB, w http.ResponseWriter) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(quote)
-	w.WriteHeader(http.StatusOK)
 }
 
 func quoteRandomHandler(db *sql.DB, w http.ResponseWriter) {
@@ -57,7 +56,6 @@ func quoteRandomHandler(db *sql.DB, w http.ResponseWriter) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(quote)
-	w.WriteHeader(http.StatusOK)
 }
 
 func quoteAllHandler(db *sql.DB, w http.ResponseWriter) {
@@ -69,5 +67,4 @@ func quoteAllHandler(db *sql.DB, w http.ResponseWriter) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(quotes)
-	w.WriteHeader(http.StatusOK)
 }
