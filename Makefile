@@ -36,6 +36,7 @@ clean:
 	@echo "Cleaning..."
 	@rm -rf bin/
 	@rm -rf mklogs/
+	@rm -f ./config.json
 	@go clean
 
 
