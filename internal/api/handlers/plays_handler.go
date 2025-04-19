@@ -41,12 +41,12 @@ func playsGetHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 }
 
 func playsGetByUserIdHandler(strUserId string, w http.ResponseWriter, db *sql.DB) {
-	userId, err := strconv.Atoi(strUserId)
+	userId, err := strconv.ParseUint(strUserId, 10, 32)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	plays, err := data.GetPlaysByUserId(userId, db)
+	plays, err := data.GetPlaysByUserId(uint(userId), db)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return

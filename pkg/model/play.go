@@ -1,8 +1,8 @@
 package model
 
 type Play struct {
-	UserId         int
-	QuoteId        int
+	UserId         uint
+	QuoteId        uint
 	WordsPerMinute float32
 	Accuracy       float32
 	Consistency    float32

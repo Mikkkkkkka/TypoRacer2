@@ -16,7 +16,7 @@ func AddPlay(play *model.Play, db *sql.DB) error {
 	return nil
 }
 
-func GetPlaysByUserId(id int, db *sql.DB) (*[]model.Play, error) {
+func GetPlaysByUserId(id uint, db *sql.DB) (*[]model.Play, error) {
 	rows, err := db.Query("SELECT * FROM plays WHERE user_id=$1", id)
 	if err != nil {
 		return nil, fmt.Errorf("GetPlaysByUserId: %w", err)

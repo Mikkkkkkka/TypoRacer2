@@ -55,7 +55,7 @@ func CalculateStats(user *model.User, db *sql.DB) (*model.UserStats, error) {
 		return nil, fmt.Errorf("CalculateStats: %w", err)
 	}
 	var stats model.UserStats
-	quotesPlayed := make(map[int]int, 10)
+	quotesPlayed := make(map[uint]uint, 10)
 	for _, play := range *plays {
 		stats.WordsPerMinute += play.WordsPerMinute
 		stats.Consistency += play.Consistency
@@ -68,12 +68,12 @@ func CalculateStats(user *model.User, db *sql.DB) (*model.UserStats, error) {
 		stats.Accuracy /= playsCount
 	}
 
-	keys := make([]int, 0, len(quotesPlayed))
+	keys := make([]uint, 0, len(quotesPlayed))
 	for k := range quotesPlayed {
 		keys = append(keys, k)
 	}
 	sort.Slice(keys, func(i, j int) bool {
-		return quotesPlayed[i] > quotesPlayed[j]
+		return quotesPlayed[uint(i)] > quotesPlayed[uint(j)]
 	})
 	if len(keys) != 0 {
 		stats.FavoriteQuote = keys[0]

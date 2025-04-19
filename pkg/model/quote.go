@@ -1,6 +1,6 @@
 package model
 
 type Quote struct {
-	Id   uint32
+	Id   uint
 	Text string
 }

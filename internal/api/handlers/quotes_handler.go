@@ -32,12 +32,12 @@ func QuotesHandlerWithDB(db *sql.DB) http.HandlerFunc {
 }
 
 func quoteIdHandler(string_id string, db *sql.DB, w http.ResponseWriter) {
-	id, err := strconv.Atoi(string_id)
+	id, err := strconv.ParseUint(string_id, 10, 32)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	quote, err := data.GetQuote(id, db)
+	quote, err := data.GetQuote(uint(id), db)
 	if err != nil {
 		log.Fatal(err)
 		http.Error(w, "Forbidden", http.StatusForbidden)

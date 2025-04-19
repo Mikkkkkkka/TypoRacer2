@@ -14,10 +14,13 @@ func AddUser(username, password string, db *sql.DB) error {
 		return fmt.Errorf("AddUser: username or password contain insecure characters")
 	}
 	_, err := db.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", username, password)
-	return fmt.Errorf("AddUser: %w", err)
+	if err != nil {
+		return fmt.Errorf("AddUser: %w", err)
+	}
+	return nil
 }
 
-func GetUserById(userId int, db *sql.DB) (*model.User, error) {
+func GetUserById(userId uint, db *sql.DB) (*model.User, error) {
 	var user model.User
 	err := db.QueryRow("SELECT id, username, password, token, token_expiration FROM users WHERE id=$1", userId).
 		Scan(&user.Id, &user.Username, &user.Password, &user.Token, &user.TokenExpiration)
@@ -60,7 +63,7 @@ func GetUserFromToken(token string, db *sql.DB) (*model.User, error) {
 	return &user, nil
 }
 
-func AddTokenToUser(token string, datetime time.Time, userId int, db *sql.DB) error {
+func AddTokenToUser(token string, datetime time.Time, userId uint, db *sql.DB) error {
 	if !isSecure(token) {
 		return fmt.Errorf("AddTokenToUser: the generated token contains insecure characters")
 	}

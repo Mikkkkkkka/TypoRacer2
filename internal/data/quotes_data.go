@@ -8,7 +8,7 @@ import (
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
-func GetQuote(id int, db *sql.DB) (*model.Quote, error) {
+func GetQuote(id uint, db *sql.DB) (*model.Quote, error) {
 	var quote model.Quote
 	err := db.QueryRow("SELECT * FROM quotes WHERE id=$1", id).Scan(&quote.Id, &quote.Text)
 	if err != nil {
@@ -34,7 +34,7 @@ func GetRandomQuote(db *sql.DB) (*model.Quote, error) {
 	for i := 0; rows.Next() && i < quoteIndex; i++ {
 	}
 
-	var randomQuoteId int
+	var randomQuoteId uint
 	err = rows.Scan(&randomQuoteId)
 	if err != nil {
 		return nil, fmt.Errorf("GetRandomQuote.rows.Scan: %w", err)
