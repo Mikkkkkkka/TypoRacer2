@@ -29,6 +29,11 @@ func ScanSecret(secret *string) error {
 			break
 		}
 		if char == 0 {
+			if length := builder.Len(); key == keyboard.KeyBackspace2 && length > 0 {
+				restorer := builder.String()
+				builder.Reset()
+				builder.WriteString(restorer[:length-1])
+			}
 			continue
 		}
 		builder.WriteRune(char)
