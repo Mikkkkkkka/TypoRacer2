@@ -9,5 +9,5 @@ COPY . .
 RUN go build -o ./server ./cmd/server
 
 EXPOSE 8080
-CMD ["./server", "--port=5431"]
+CMD ["./server", "--host=typo-postgres"]
 

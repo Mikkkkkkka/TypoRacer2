@@ -31,7 +31,7 @@ func initializeFlags() {
 
 func createConnectionString() string {
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgresql://%s:%s@%s:%s/%s?sslmode=disable",
 		user, password, host, port, db)
 }
 
