@@ -14,9 +14,9 @@ import (
 	"github.com/eiannone/keyboard"
 )
 
-func CalculatePlayResults(record *model.PlayRecord, db *sql.DB) (*model.Play, error) {
+func CalculatePlayResults(userId uint, record *model.PlayRecord, db *sql.DB) (*model.Play, error) {
 	play := model.Play{
-		UserId:  record.UserId,
+		UserId:  userId,
 		QuoteId: record.QuoteId,
 	}
 	quote, err := data.GetQuote(record.QuoteId, db)

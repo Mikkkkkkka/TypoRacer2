@@ -7,7 +7,6 @@ import (
 )
 
 type PlayRecord struct {
-	UserId    uint
 	QuoteId   uint
 	KeyStream []KeyPress
 }

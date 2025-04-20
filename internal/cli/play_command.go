@@ -30,21 +30,69 @@ func Play(cfg *config.CliConfig) error {
 		panic(err)
 	}
 
-	user, err := requestLogin(username, password, cfg)
+	token, err := requestLogin(username, password, cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("requestLogin: %w", err)
 	}
 	quote, err := requestQuote(cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("requestQuote: %w", err)
 	}
 
-	_, err = playScene(user, quote)
+	record, err := playScene(quote)
 	if err != nil {
-		return err
+		return fmt.Errorf("playScene: %w", err)
 	}
+
+	play, err := sendPlayRecord(token, record, cfg)
+	if err != nil {
+		return fmt.Errorf("sendPlayRecord: %w", err)
+	}
+
+	fmt.Println("Stats:")
+	fmt.Println()
+	fmt.Println("QuoteId:", quote.Id)
+	fmt.Println("WPM:", play.WordsPerMinute)
+	fmt.Println("Accuracy:", play.Accuracy)
+	fmt.Println("Consistency:", play.Consistency)
 
 	return nil
+}
+
+func sendPlayRecord(token *string, record *model.PlayRecord, cfg *config.CliConfig) (*model.Play, error) {
+	payloadData, err := json.Marshal(record)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, cfg.Url()+"api/v1/plays", bytes.NewBuffer(payloadData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", *token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.Status != "200 OK" {
+		return nil, fmt.Errorf("unexpected response code: %s", res.Status)
+	}
+
+	responseData := model.Play{
+		UserId:         0,
+		QuoteId:        0,
+		WordsPerMinute: 0,
+		Accuracy:       0,
+		Consistency:    0,
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&responseData); err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	return &responseData, err
 }
 
 func requestQuote(cfg *config.CliConfig) (*model.Quote, error) {
@@ -58,12 +106,14 @@ func requestQuote(cfg *config.CliConfig) (*model.Quote, error) {
 	}
 
 	var quote model.Quote
-	json.NewDecoder(res.Body).Decode(&quote)
+	if err := json.NewDecoder(res.Body).Decode(&quote); err != nil {
+		return nil, err
+	}
 
 	return &quote, nil
 }
 
-func requestLogin(username, password string, cfg *config.CliConfig) (*model.User, error) {
+func requestLogin(username, password string, cfg *config.CliConfig) (*string, error) {
 	if username == "" || password == "" {
 		return nil, fmt.Errorf("username or password is empty")
 	}
@@ -74,7 +124,10 @@ func requestLogin(username, password string, cfg *config.CliConfig) (*model.User
 	}
 	// TODO: add password hashing
 
-	payloadData, _ := json.Marshal(body)
+	payloadData, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
 
 	res, err := http.Post(cfg.Url()+"api/v1/login", "json", bytes.NewBuffer(payloadData))
 	if err != nil {
@@ -85,15 +138,13 @@ func requestLogin(username, password string, cfg *config.CliConfig) (*model.User
 		return nil, fmt.Errorf("unexpected response code: %s", res.Status)
 	}
 
-	var user model.User
-	json.NewDecoder(res.Body).Decode(&user)
+	token := res.Header.Get("Authorization")
 
-	return &user, nil
+	return &token, nil
 }
 
-func playScene(user *model.User, quote *model.Quote) (*model.PlayRecord, error) {
+func playScene(quote *model.Quote) (*model.PlayRecord, error) {
 	record := model.PlayRecord{
-		UserId:  user.Id,
 		QuoteId: quote.Id,
 	}
 

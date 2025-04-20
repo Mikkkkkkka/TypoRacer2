@@ -12,6 +12,8 @@ import (
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
+const BEARER_PREFIX_LENGTH = 8
+
 func PlaysHandlerWithDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -73,8 +75,15 @@ func playsPostHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 	defer r.Body.Close()
+	token := r.Header.Get("Authorization")
+	user, err := data.GetUserFromToken(token[BEARER_PREFIX_LENGTH:], db)
+	if err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		log.Println(err)
+		return
+	}
 
-	play, err := service.CalculatePlayResults(&payloadData, db)
+	play, err := service.CalculatePlayResults(user.Id, &payloadData, db)
 	if err != nil {
 		http.Error(w, "Invalid quote id", http.StatusBadRequest)
 		log.Println(err)
@@ -83,6 +92,12 @@ func playsPostHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	if err := data.AddPlay(play, db); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(play); err != nil {
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
