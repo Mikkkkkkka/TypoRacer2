@@ -21,7 +21,7 @@ var (
 )
 
 func initializeFlags() {
-	flag.StringVar(&host, "server", "localhost", "The address of DB")
+	flag.StringVar(&host, "host", "localhost", "The address of DB")
 	flag.StringVar(&port, "port", "5432", "The port of DB")
 	flag.StringVar(&user, "user", "postgres", "The user of DB to be logged in as")
 	flag.StringVar(&password, "password", "mysecretpassword", "The password of said user")
@@ -30,8 +30,9 @@ func initializeFlags() {
 }
 
 func createConnectionString() string {
-	return fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%s sslmode=disable",
-		user, db, password, host, port)
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		user, password, host, port, db)
 }
 
 func main() {
