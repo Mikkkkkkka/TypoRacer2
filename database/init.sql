@@ -38,4 +38,4 @@ INSERT INTO public.quotes ("text")
 VALUES ('The quick brown fox jumps over the lazy dog.');
 
 INSERT INTO public.quotes ("text")
-VALUES ('Eat some more of these soft french puns and drink cup of tea.');
+VALUES ('Eat some more of these soft french puns and drink a cup of tea.');

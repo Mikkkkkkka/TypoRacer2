@@ -54,4 +54,6 @@ help:
 	@echo "  server    - Build only server"
 	@echo "  client    - Build only client"
 	@echo "  run-server- Build and run server"
-	@echo "  clean     - Remove build artifacts"
+	@echo "  run-e2e   - Build and run both (from the perspective of client)
+						 and log server output to ./mklogs/server.log"
+	@echo "  clean     - Remove build and `run-e2e` artifacts"
