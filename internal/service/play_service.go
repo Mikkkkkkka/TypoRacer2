@@ -24,13 +24,13 @@ func CalculatePlayResults(userId uint, record *model.PlayRecord, db *sql.DB) (*m
 		log.Println(err)
 		return nil, fmt.Errorf("CalculatePlayResults.data.GetQuote: %w", err)
 	}
-	play.WordsPerMinute = calculateWordsPerMinute(quote, record)
+	play.WordsPerMinute = calculateWordsPerMinute(record)
 	play.Accuracy = calculateAccuracy(quote, record) * 100.0
 	play.Consistency = calculateConsistency(record) * 100.0
 	return &play, nil
 }
 
-func calculateWordsPerMinute(quote *model.Quote, record *model.PlayRecord) float32 {
+func calculateWordsPerMinute(record *model.PlayRecord) float32 {
 	times := make([]time.Duration, len(record.KeyStream))
 	for _, v := range record.KeyStream {
 		times = append(times, v.ElapsedTime)
@@ -43,7 +43,9 @@ func calculateAccuracy(quote *model.Quote, record *model.PlayRecord) float32 {
 	mistakeCount := 0
 	text := []rune(quote.Text)
 	for i, j := 0, 0; i < len(quote.Text) && j < len(record.KeyStream); j++ {
-		if text[i] != record.KeyStream[j].KeyEvent.Rune || record.KeyStream[i].KeyEvent.Key != keyboard.KeyBackspace {
+		if record.KeyStream[j].KeyEvent.Rune != text[i] &&
+			record.KeyStream[j].KeyEvent.Rune == 0 &&
+			record.KeyStream[j].KeyEvent.Key != keyboard.KeyBackspace2 { // TODO: refactor (this is ridiculous)
 			mistakeCount++
 			continue
 		}
@@ -52,9 +54,10 @@ func calculateAccuracy(quote *model.Quote, record *model.PlayRecord) float32 {
 	if mistakeCount > len(quote.Text) {
 		return 0
 	}
-	return 1.0 - float32(mistakeCount/len(quote.Text))
+	return 1.0 - float32(mistakeCount)/float32(len(text))
 }
 
+// FIXME: unexpectedly returns values over 100
 func calculateConsistency(record *model.PlayRecord) float32 {
 	n := len(record.KeyStream)
 	times := make([]time.Duration, n)
