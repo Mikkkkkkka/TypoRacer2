@@ -23,11 +23,11 @@ func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
 		token := generateToken()
 		expiration := time.Now().Add(15 * time.Minute)
 		if err = data.AddTokenToUser(token, expiration, user.Id, db); err == nil {
-			log.Println(err)
 			return data.GetUserById(user.Id, db)
 		}
 	}
 
+	log.Println(err)
 	return nil, fmt.Errorf("LoginUser: failed to generate token")
 }
 
