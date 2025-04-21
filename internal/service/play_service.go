@@ -44,8 +44,8 @@ func calculateAccuracy(quote *model.Quote, record *model.PlayRecord) float32 {
 	text := []rune(quote.Text)
 	for i, j := 0, 0; i < len(quote.Text) && j < len(record.KeyStream); j++ {
 		if record.KeyStream[j].KeyEvent.Rune != text[i] &&
-			record.KeyStream[j].KeyEvent.Rune == 0 &&
-			record.KeyStream[j].KeyEvent.Key != keyboard.KeyBackspace2 { // TODO: refactor (this is ridiculous)
+			!(record.KeyStream[j].KeyEvent.Rune == 0 &&
+				record.KeyStream[j].KeyEvent.Key == keyboard.KeyBackspace2) { // TODO: refactor (this is ridiculous)
 			mistakeCount++
 			continue
 		}
@@ -57,18 +57,18 @@ func calculateAccuracy(quote *model.Quote, record *model.PlayRecord) float32 {
 	return 1.0 - float32(mistakeCount)/float32(len(text))
 }
 
-// FIXME: unexpectedly returns values over 100
 func calculateConsistency(record *model.PlayRecord) float32 {
-	n := len(record.KeyStream)
-	times := make([]time.Duration, n)
-	for _, v := range record.KeyStream {
-		times = append(times, v.ElapsedTime)
+	n := float64(len(record.KeyStream))
+	msTimes := make([]time.Duration, 0, int64(n))
+	for _, keyPress := range record.KeyStream {
+		msTimes = append(msTimes, keyPress.ElapsedTime/time.Millisecond)
 	}
-	averageTime := time.Duration(math.Round(utils.Average(times)))
-	for i, v := range times {
-		times[i] = averageTime - v
+	deviations := make([]float64, 0, int(n))
+	averageTime := utils.Average(msTimes)
+	for _, time := range msTimes {
+		deviations = append(deviations, math.Pow(float64(time)-averageTime, 2))
 	}
-	return 1.0 - (float32(utils.Sum(times))/float32(n-1))/float32(n)
+	return 1.0 - float32(math.Sqrt(utils.Sum(deviations)/(n))/averageTime)
 }
 
 func countWordsInInput(record *model.PlayRecord) int {
