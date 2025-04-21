@@ -181,6 +181,7 @@ func playScene(quote *model.Quote) (*model.PlayRecord, error) {
 		builder.WriteRune(char)
 	}
 
+	record.KeyStream[0].ElapsedTime = 0
 	return &record, nil
 }
 
