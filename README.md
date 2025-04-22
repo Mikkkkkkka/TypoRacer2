@@ -1,11 +1,23 @@
 # TypoRacer2
 
-Распределённое на сервер и клиент приложение/игра для тренировки скоропечати.   
-Серверная сторона представлена комбинацией из серверной программы и базы данных PostgreSQL.
+A competitive typing game in the early stages of development written in Go.
+[Версия ну русском](j./)
 
-## Структура
+## Structure
 
-Проект представляет из себя моно-репозиторий разбитый на три части: cli-клиент, сервер и база данных PostgreSQL. Взаимодействие между сервером и клиентом происходит по протоколу HTTP.
+This project is a mono-repo for both its server-side application and a minimalistic cli-client. The server is intended to be easily started.
+The server-side and the client transfer data via HTTP.
+
+## Getting started
+
+If you have docker installed then running the server should be a breeze.
+
+1. Download the repo.
+2. Run `docker-compose up --build`
+3. The server will be available on port 8080 by default. To change it, modify the corresponding field in the `docker-compose.yml` file.
+4. To stop the server run `docker-compose down` and add the `--volumes` flag to remove all the data from the database.
+
+Running the cli-client however, requires having the golang compiler installed.
 
 ## License
 
