@@ -11,6 +11,7 @@ import (
 	"github.com/Mikkkkkkka/typoracer/internal/api"
 	"github.com/Mikkkkkkka/typoracer/internal/api/handlers"
 	"github.com/Mikkkkkkka/typoracer/internal/data"
+	"github.com/Mikkkkkkka/typoracer/internal/service"
 )
 
 var (
@@ -45,9 +46,11 @@ func main() {
 		return
 	}
 
-	loginHandler := handlers.NewLoginHandler(db)
-	registerHandler := handlers.NewRegisterHandler(db)
-	usersHandler := handlers.NewUsersHandler(db)
+	userService := service.NewUserService(db)
+
+	loginHandler := handlers.NewLoginHandler(&userService)
+	registerHandler := handlers.NewRegisterHandler(&userService)
+	usersHandler := handlers.NewUsersHandler(userService)
 	quotesHandler := handlers.NewQuotesHandler(db)
 	playsHandler := handlers.NewPlaysHandler(db)
 

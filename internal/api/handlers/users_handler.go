@@ -1,22 +1,20 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 
-	"github.com/Mikkkkkkka/typoracer/internal/data"
 	"github.com/Mikkkkkkka/typoracer/internal/service"
 )
 
 type UsersHandler struct {
-	db *sql.DB
+	service service.UserService
 }
 
-func NewUsersHandler(db *sql.DB) *UsersHandler {
-	return &UsersHandler{db: db}
+func NewUsersHandler(service service.UserService) *UsersHandler {
+	return &UsersHandler{service: service}
 }
 
 func (handler UsersHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -24,21 +22,21 @@ func (handler UsersHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (handler UsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	userId, err := strconv.Atoi(r.PathValue("id"))
+	userId, err := strconv.ParseUint(r.PathValue("id"), 10, 32)
 	if err != nil {
 		http.Error(w, "Invalid user id format", http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
 
-	user, err := data.GetUserWithoutTokenById(userId, handler.db)
+	user, err := handler.service.GetUserById(uint(userId))
 	if err != nil {
 		http.Error(w, "User with id does not exist", http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
 
-	stats, err := service.CalculateStats(user, handler.db)
+	stats, err := handler.service.CalculateStats(user)
 	if err != nil {
 		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)

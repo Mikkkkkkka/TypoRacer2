@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -11,11 +10,11 @@ import (
 )
 
 type LoginHandler struct {
-	db *sql.DB
+	service *service.UserService
 }
 
-func NewLoginHandler(db *sql.DB) *LoginHandler {
-	return &LoginHandler{db: db}
+func NewLoginHandler(service *service.UserService) *LoginHandler {
+	return &LoginHandler{service: service}
 }
 
 func (handler LoginHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -38,7 +37,7 @@ func (handler LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	user, err := service.LoginUser(payloadData.Username, payloadData.Password, handler.db)
+	user, err := handler.service.LoginUser(payloadData.Username, payloadData.Password)
 	if err != nil && err.Error() != "LoginUser: failed to generate token" {
 		http.Error(w, "Incorrect password or login", http.StatusBadRequest)
 		log.Println(err)

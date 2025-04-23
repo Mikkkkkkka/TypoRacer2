@@ -34,7 +34,7 @@ func GetUserById(userId uint, db *sql.DB) (*model.User, error) {
 	return &user, nil
 }
 
-func GetUserWithoutTokenById(id int, db *sql.DB) (*model.User, error) {
+func GetUserWithoutTokenById(id uint, db *sql.DB) (*model.User, error) {
 	var user model.User
 	err := db.QueryRow("SELECT id, username, password FROM users WHERE id=$1", id).
 		Scan(&user.Id, &user.Username, &user.Password)

@@ -12,8 +12,23 @@ import (
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
-func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
-	user, err := data.GetUserWithoutTokenByUsername(username, db)
+type UserService struct {
+	db *sql.DB
+}
+
+func NewUserService(db *sql.DB) UserService {
+	return UserService{db: db}
+}
+
+func (service UserService) RegisterUser(username, password string) error {
+	if err := data.AddUser(username, password, service.db); err != nil {
+		return fmt.Errorf("UserService.RegisterUser.data.AddUser: %w", err)
+	}
+	return nil
+}
+
+func (service UserService) LoginUser(username, password string) (*model.User, error) {
+	user, err := data.GetUserWithoutTokenByUsername(username, service.db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("LoginUser: no user with username \"%s\"", username)
@@ -22,8 +37,8 @@ func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
 	for range 5 {
 		token := generateToken()
 		expiration := time.Now().Add(15 * time.Minute)
-		if err = data.AddTokenToUser(token, expiration, user.Id, db); err == nil {
-			return data.GetUserById(user.Id, db)
+		if err = data.AddTokenToUser(token, expiration, user.Id, service.db); err == nil {
+			return data.GetUserById(user.Id, service.db)
 		}
 	}
 
@@ -31,8 +46,12 @@ func LoginUser(username, password string, db *sql.DB) (*model.User, error) {
 	return nil, fmt.Errorf("LoginUser: failed to generate token")
 }
 
-func AuthorizeUser(token string, db *sql.DB) (*model.User, error) {
-	user, err := data.GetUserFromToken(token, db)
+func (service UserService) GetUserById(userId uint) (*model.User, error) {
+	return data.GetUserWithoutTokenById(userId, service.db)
+}
+
+func (service UserService) AuthorizeUser(token string) (*model.User, error) {
+	user, err := data.GetUserFromToken(token, service.db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("AuthorizeUser: no user with token")
@@ -54,8 +73,8 @@ func generateToken() string {
 	return string(token)
 }
 
-func CalculateStats(user *model.User, db *sql.DB) (*model.UserStats, error) {
-	plays, err := data.GetPlaysByUserId(user.Id, db)
+func (service UserService) CalculateStats(user *model.User) (*model.UserStats, error) {
+	plays, err := data.GetPlaysByUserId(user.Id, service.db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("CalculateStats: %w", err)

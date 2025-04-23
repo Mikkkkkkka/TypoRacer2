@@ -1,21 +1,20 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 
-	"github.com/Mikkkkkkka/typoracer/internal/data"
+	"github.com/Mikkkkkkka/typoracer/internal/service"
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
 type RegisterHandler struct {
-	db *sql.DB
+	service *service.UserService
 }
 
-func NewRegisterHandler(db *sql.DB) *RegisterHandler {
-	return &RegisterHandler{db: db}
+func NewRegisterHandler(service *service.UserService) *RegisterHandler {
+	return &RegisterHandler{service: service}
 }
 
 func (handler RegisterHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -38,7 +37,7 @@ func (handler RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 	defer r.Body.Close()
 
-	if err := data.AddUser(payloadData.Username, payloadData.Password, handler.db); err != nil {
+	if err := handler.service.RegisterUser(payloadData.Username, payloadData.Password); err != nil {
 		log.Println(err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
