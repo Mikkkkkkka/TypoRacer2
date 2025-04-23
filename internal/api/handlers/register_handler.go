@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Mikkkkkkka/typoracer/internal/data"
-	"github.com/Mikkkkkkka/typoracer/pkg/model/requests"
+	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
 type RegisterHandler struct {
@@ -29,7 +29,7 @@ func (handler RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var payloadData requests.LoginInfo
+	var payloadData model.LoginInfo
 
 	if err := json.NewDecoder(r.Body).Decode(&payloadData); err != nil {
 		log.Println(err)

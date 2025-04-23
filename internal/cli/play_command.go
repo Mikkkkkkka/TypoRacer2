@@ -11,7 +11,6 @@ import (
 
 	"github.com/Mikkkkkkka/typoracer/internal/config"
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
-	"github.com/Mikkkkkkka/typoracer/pkg/model/requests"
 	"github.com/Mikkkkkkka/typoracer/pkg/utils"
 	"github.com/eiannone/keyboard"
 	"github.com/muesli/termenv"
@@ -118,7 +117,7 @@ func requestLogin(username, password string, cfg *config.CliConfig) (*string, er
 		return nil, fmt.Errorf("username or password is empty")
 	}
 
-	body := requests.LoginInfo{
+	body := model.LoginInfo{
 		Username: username,
 		Password: password,
 	}

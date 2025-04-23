@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/Mikkkkkkka/typoracer/internal/config"
-	"github.com/Mikkkkkkka/typoracer/pkg/model/requests"
+	"github.com/Mikkkkkkka/typoracer/pkg/model"
 	"github.com/Mikkkkkkka/typoracer/pkg/utils"
 )
 
@@ -41,7 +41,7 @@ func requestRegistration(username, password string, cfg *config.CliConfig) error
 		return errors.New("username or password is empty")
 	}
 
-	body := requests.LoginInfo{
+	body := model.LoginInfo{
 		Username: username,
 		Password: password,
 	}

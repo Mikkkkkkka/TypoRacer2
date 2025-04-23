@@ -1,4 +1,4 @@
-package requests
+package model
 
 type LoginInfo struct {
 	Username string
