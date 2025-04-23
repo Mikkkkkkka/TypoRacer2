@@ -10,36 +10,46 @@ import (
 	"github.com/Mikkkkkkka/typoracer/internal/data"
 )
 
-func QuotesHandlerWithDB(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			log.Println("Method not allowed for api/v1/quotes")
-			return
-		}
+type QuotesHandler struct {
+	db *sql.DB
+}
 
-		string_id := r.URL.Query().Get("id")
-		random := r.URL.Query().Get("random")
+func NewQuotesHandler(db *sql.DB) *QuotesHandler {
+	return &QuotesHandler{db: db}
+}
 
-		switch {
-		case string_id != "":
-			quoteIdHandler(string_id, db, w)
-		case random == "true":
-			quoteRandomHandler(db, w)
-		default:
-			quoteAllHandler(db, w)
-		}
+func (handler QuotesHandler) RegisterRoutes(mux *http.ServeMux) {
+	mux.Handle("/api/v1/quotes", handler)
+}
+
+func (handler QuotesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed for api/v1/quotes")
+		return
+	}
+
+	string_id := r.URL.Query().Get("id")
+	random := r.URL.Query().Get("random")
+
+	switch {
+	case string_id != "":
+		handler.quoteIdHandler(string_id, w)
+	case random == "true":
+		handler.quoteRandomHandler(w)
+	default:
+		handler.quoteAllHandler(w)
 	}
 }
 
-func quoteIdHandler(string_id string, db *sql.DB, w http.ResponseWriter) {
+func (handler QuotesHandler) quoteIdHandler(string_id string, w http.ResponseWriter) {
 	id, err := strconv.ParseUint(string_id, 10, 32)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
 		return
 	}
-	quote, err := data.GetQuote(uint(id), db)
+	quote, err := data.GetQuote(uint(id), handler.db)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -52,8 +62,8 @@ func quoteIdHandler(string_id string, db *sql.DB, w http.ResponseWriter) {
 	}
 }
 
-func quoteRandomHandler(db *sql.DB, w http.ResponseWriter) {
-	quote, err := data.GetRandomQuote(db)
+func (handler QuotesHandler) quoteRandomHandler(w http.ResponseWriter) {
+	quote, err := data.GetRandomQuote(handler.db)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -66,8 +76,8 @@ func quoteRandomHandler(db *sql.DB, w http.ResponseWriter) {
 	}
 }
 
-func quoteAllHandler(db *sql.DB, w http.ResponseWriter) {
-	quotes, err := data.GetAllQuotes(db)
+func (handler QuotesHandler) quoteAllHandler(w http.ResponseWriter) {
+	quotes, err := data.GetAllQuotes(handler.db)
 	if err != nil {
 		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)

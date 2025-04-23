@@ -10,30 +10,40 @@ import (
 	"github.com/Mikkkkkkka/typoracer/pkg/model/requests"
 )
 
-func LoginHandlerWithDB(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			log.Println("Method not allowed for /api/v1/login")
-			return
-		}
+type LoginHandler struct {
+	db *sql.DB
+}
 
-		var payloadData requests.LoginInfo
+func NewLoginHandler(db *sql.DB) *LoginHandler {
+	return &LoginHandler{db: db}
+}
 
-		if err := json.NewDecoder(r.Body).Decode(&payloadData); err != nil {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			log.Println(err)
-			return
-		}
-		defer r.Body.Close()
+func (handler LoginHandler) RegisterRoutes(mux *http.ServeMux) {
+	mux.Handle("/api/v1/login", handler)
+}
 
-		user, err := service.LoginUser(payloadData.Username, payloadData.Password, db)
-		if err != nil && err.Error() != "LoginUser: failed to generate token" {
-			http.Error(w, "Incorrect password or login", http.StatusBadRequest)
-			log.Println(err)
-			return
-		}
-
-		w.Header().Add("Authorization", "Bearer: "+user.Token)
+func (handler LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed for /api/v1/login")
+		return
 	}
+
+	var payloadData requests.LoginInfo
+
+	if err := json.NewDecoder(r.Body).Decode(&payloadData); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+	defer r.Body.Close()
+
+	user, err := service.LoginUser(payloadData.Username, payloadData.Password, handler.db)
+	if err != nil && err.Error() != "LoginUser: failed to generate token" {
+		http.Error(w, "Incorrect password or login", http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+
+	w.Header().Add("Authorization", "Bearer: "+user.Token)
 }

@@ -20,6 +20,10 @@ func Stats(cfg *config.CliConfig) error {
 		return fmt.Errorf("Stats.http.Get: %w", err)
 	}
 
+	if resp.Status != "200 OK" {
+		return fmt.Errorf("unexpected response code: %s", resp.Status)
+	}
+
 	var stats model.UserStats
 	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
 		return fmt.Errorf("Stats.json.Decode: %w", err)

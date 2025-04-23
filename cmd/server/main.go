@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/Mikkkkkkka/typoracer/internal/api"
+	"github.com/Mikkkkkkka/typoracer/internal/api/handlers"
 	"github.com/Mikkkkkkka/typoracer/internal/data"
 )
 
@@ -43,7 +44,20 @@ func main() {
 		log.Fatalln(err)
 		return
 	}
+
+	loginHandler := handlers.NewLoginHandler(db)
+	registerHandler := handlers.NewRegisterHandler(db)
+	usersHandler := handlers.NewUsersHandler(db)
+	quotesHandler := handlers.NewQuotesHandler(db)
+	playsHandler := handlers.NewPlaysHandler(db)
+
 	mux := api.NewRouter(db)
+
+	loginHandler.RegisterRoutes(mux)
+	registerHandler.RegisterRoutes(mux)
+	usersHandler.RegisterRoutes(mux)
+	quotesHandler.RegisterRoutes(mux)
+	playsHandler.RegisterRoutes(mux)
 
 	log.Println("Server is running on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", mux))
