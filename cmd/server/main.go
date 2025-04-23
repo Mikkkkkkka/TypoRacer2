@@ -47,11 +47,12 @@ func main() {
 	}
 
 	userService := service.NewUserService(db)
+	quoteService := service.NewQuoteService(db)
 
 	loginHandler := handlers.NewLoginHandler(&userService)
 	registerHandler := handlers.NewRegisterHandler(&userService)
-	usersHandler := handlers.NewUsersHandler(userService)
-	quotesHandler := handlers.NewQuotesHandler(db)
+	usersHandler := handlers.NewUsersHandler(&userService)
+	quotesHandler := handlers.NewQuotesHandler(&quoteService)
 	playsHandler := handlers.NewPlaysHandler(db)
 
 	mux := api.NewRouter(db)

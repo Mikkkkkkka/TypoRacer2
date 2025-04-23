@@ -1,21 +1,20 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 
-	"github.com/Mikkkkkkka/typoracer/internal/data"
+	"github.com/Mikkkkkkka/typoracer/internal/service"
 )
 
 type QuotesHandler struct {
-	db *sql.DB
+	service *service.QuoteService
 }
 
-func NewQuotesHandler(db *sql.DB) *QuotesHandler {
-	return &QuotesHandler{db: db}
+func NewQuotesHandler(service *service.QuoteService) *QuotesHandler {
+	return &QuotesHandler{service: service}
 }
 
 func (handler QuotesHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -49,7 +48,7 @@ func (handler QuotesHandler) quoteIdHandler(string_id string, w http.ResponseWri
 		log.Println(err)
 		return
 	}
-	quote, err := data.GetQuote(uint(id), handler.db)
+	quote, err := handler.service.GetQuote(uint(id))
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -63,7 +62,7 @@ func (handler QuotesHandler) quoteIdHandler(string_id string, w http.ResponseWri
 }
 
 func (handler QuotesHandler) quoteRandomHandler(w http.ResponseWriter) {
-	quote, err := data.GetRandomQuote(handler.db)
+	quote, err := handler.service.GetRandomQuote()
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -77,7 +76,7 @@ func (handler QuotesHandler) quoteRandomHandler(w http.ResponseWriter) {
 }
 
 func (handler QuotesHandler) quoteAllHandler(w http.ResponseWriter) {
-	quotes, err := data.GetAllQuotes(handler.db)
+	quotes, err := handler.service.GetAllQuotes()
 	if err != nil {
 		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)
