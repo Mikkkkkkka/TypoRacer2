@@ -1,7 +1,7 @@
 # TypoRacer2
 
-A competitive typing game in the early stages of development written in Go.
-[Версия ну русском](./docs/README-RU.md)
+A competitive typing game in the early stages of development written in Go.  
+[Версия на русском](./docs/README-RU.md)
 
 ## Structure
 
