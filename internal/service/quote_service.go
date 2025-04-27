@@ -13,8 +13,8 @@ type QuoteService struct {
 	db *sql.DB
 }
 
-func NewQuoteService(db *sql.DB) QuoteService {
-	return QuoteService{db: db}
+func NewQuoteService(db *sql.DB) *QuoteService {
+	return &QuoteService{db: db}
 }
 
 func (service *QuoteService) GetAllQuotes() (*[]model.Quote, error) {

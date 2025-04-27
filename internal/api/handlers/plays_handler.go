@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -15,11 +14,11 @@ import (
 const BEARER_PREFIX_LENGTH = 8
 
 type PlaysHandler struct {
-	db *sql.DB
+	service *service.PlayService
 }
 
-func NewPlaysHandler(db *sql.DB) *PlaysHandler {
-	return &PlaysHandler{db: db}
+func NewPlaysHandler(service *service.PlayService) *PlaysHandler {
+	return &PlaysHandler{service: service}
 }
 
 func (handler PlaysHandler) RegisterRoutes(mux *http.ServeMux) {
@@ -45,7 +44,7 @@ func (handler PlaysHandler) playsGetHandler(w http.ResponseWriter, r *http.Reque
 		handler.playsGetByUserIdHandler(strUserId, w)
 		return
 	}
-	plays, err := data.GetAllPlays(handler.db)
+	plays, err := handler.service.GetAllPlays()
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -64,7 +63,7 @@ func (handler PlaysHandler) playsGetByUserIdHandler(strUserId string, w http.Res
 		log.Println(err)
 		return
 	}
-	plays, err := data.GetPlaysByUserId(uint(userId), handler.db)
+	plays, err := handler.service.GetPlaysByUserId(uint(userId))
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -86,21 +85,21 @@ func (handler PlaysHandler) playsPostHandler(w http.ResponseWriter, r *http.Requ
 	}
 	defer r.Body.Close()
 	token := r.Header.Get("Authorization")
-	user, err := data.GetUserFromToken(token[BEARER_PREFIX_LENGTH:], handler.db)
+	user, err := data.GetUserFromToken(token[BEARER_PREFIX_LENGTH:], handler.service.Db)
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
 		return
 	}
 
-	play, err := service.CalculatePlayResults(user.Id, &payloadData, handler.db)
+	play, err := handler.service.CalculatePlayResults(user.Id, &payloadData)
 	if err != nil {
 		http.Error(w, "Invalid quote id", http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
 
-	if err := data.AddPlay(play, handler.db); err != nil {
+	if err := handler.service.AddPlay(play); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		log.Println(err)
 		return

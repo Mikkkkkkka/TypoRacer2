@@ -48,12 +48,13 @@ func main() {
 
 	userService := service.NewUserService(db)
 	quoteService := service.NewQuoteService(db)
+	playService := service.NewPlayService(db)
 
-	loginHandler := handlers.NewLoginHandler(&userService)
-	registerHandler := handlers.NewRegisterHandler(&userService)
-	usersHandler := handlers.NewUsersHandler(&userService)
-	quotesHandler := handlers.NewQuotesHandler(&quoteService)
-	playsHandler := handlers.NewPlaysHandler(db)
+	loginHandler := handlers.NewLoginHandler(userService)
+	registerHandler := handlers.NewRegisterHandler(userService)
+	usersHandler := handlers.NewUsersHandler(userService)
+	quotesHandler := handlers.NewQuotesHandler(quoteService)
+	playsHandler := handlers.NewPlaysHandler(playService)
 
 	mux := api.NewRouter(db)
 

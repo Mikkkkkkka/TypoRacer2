@@ -14,12 +14,32 @@ import (
 	"github.com/eiannone/keyboard"
 )
 
-func CalculatePlayResults(userId uint, record *model.PlayRecord, db *sql.DB) (*model.Play, error) {
+type PlayService struct {
+	Db *sql.DB
+}
+
+func NewPlayService(Db *sql.DB) *PlayService {
+	return &PlayService{Db: Db}
+}
+
+func (service *PlayService) GetPlaysByUserId(userId uint) (*[]model.Play, error) {
+	return data.GetPlaysByUserId(userId, service.Db)
+}
+
+func (service *PlayService) GetAllPlays() (*[]model.Play, error) {
+	return data.GetAllPlays(service.Db)
+}
+
+func (service *PlayService) AddPlay(play *model.Play) error {
+	return data.AddPlay(play, service.Db)
+}
+
+func (service PlayService) CalculatePlayResults(userId uint, record *model.PlayRecord) (*model.Play, error) {
 	play := model.Play{
 		UserId:  userId,
 		QuoteId: record.QuoteId,
 	}
-	quote, err := data.GetQuote(record.QuoteId, db)
+	quote, err := data.GetQuote(record.QuoteId, service.Db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("CalculatePlayResults.data.GetQuote: %w", err)
