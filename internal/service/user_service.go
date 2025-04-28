@@ -20,11 +20,14 @@ func NewUserService(db *sql.DB) *UserService {
 	return &UserService{db: db}
 }
 
-func (service UserService) RegisterUser(username, password string) error {
-	if err := data.AddUser(username, password, service.db); err != nil {
-		return fmt.Errorf("UserService.RegisterUser.data.AddUser: %w", err)
+const tokenChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+func generateToken() string {
+	token := make([]byte, 20)
+	for i := range 20 {
+		token[i] = tokenChars[rand.IntN(len(tokenChars))]
 	}
-	return nil
+	return string(token)
 }
 
 func (service UserService) LoginUser(username, password string) (*model.User, error) {
@@ -46,8 +49,11 @@ func (service UserService) LoginUser(username, password string) (*model.User, er
 	return nil, fmt.Errorf("LoginUser: failed to generate token")
 }
 
-func (service UserService) GetUserById(userId uint) (*model.User, error) {
-	return data.GetUserWithoutTokenById(userId, service.db)
+func (service UserService) RegisterUser(username, password string) error {
+	if err := data.AddUser(username, password, service.db); err != nil {
+		return fmt.Errorf("UserService.RegisterUser.data.AddUser: %w", err)
+	}
+	return nil
 }
 
 func (service UserService) AuthorizeUser(token string) (*model.User, error) {
@@ -63,18 +69,8 @@ func (service UserService) AuthorizeUser(token string) (*model.User, error) {
 	return user, nil
 }
 
-const tokenChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-
-func generateToken() string {
-	token := make([]byte, 20)
-	for i := range 20 {
-		token[i] = tokenChars[rand.IntN(len(tokenChars))]
-	}
-	return string(token)
-}
-
-func (service UserService) CalculateStats(user *model.User) (*model.UserStats, error) {
-	plays, err := data.GetPlaysByUserId(user.Id, service.db)
+func (service UserService) CalculateStats(userId uint) (*model.UserStats, error) {
+	plays, err := data.GetPlaysByUserId(userId, service.db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("CalculateStats: %w", err)

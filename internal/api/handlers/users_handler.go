@@ -18,7 +18,7 @@ func NewUsersHandler(service *service.UserService) *UsersHandler {
 }
 
 func (handler UsersHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.Handle("/api/v1/users/{id}", handler)
+	mux.Handle("GET /api/v1/users/{id}", handler)
 }
 
 func (handler UsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -28,21 +28,12 @@ func (handler UsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-
-	user, err := handler.service.GetUserById(uint(userId))
-	if err != nil {
-		http.Error(w, "User with id does not exist", http.StatusBadRequest)
-		log.Println(err)
-		return
-	}
-
-	stats, err := handler.service.CalculateStats(user)
+	stats, err := handler.service.CalculateStats(uint(userId))
 	if err != nil {
 		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
-
 	if err := json.NewEncoder(w).Encode(stats); err != nil {
 		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)

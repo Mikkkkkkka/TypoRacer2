@@ -18,18 +18,11 @@ func NewLoginHandler(service *service.UserService) *LoginHandler {
 }
 
 func (handler LoginHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.Handle("/api/v1/login", handler)
+	mux.Handle("POST /api/v1/login", handler)
 }
 
 func (handler LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		log.Println("Method not allowed for /api/v1/login")
-		return
-	}
-
 	var payloadData model.LoginInfo
-
 	if err := json.NewDecoder(r.Body).Decode(&payloadData); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		log.Println(err)
