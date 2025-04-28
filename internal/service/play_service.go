@@ -15,23 +15,32 @@ import (
 )
 
 type PlayService struct {
-	Db *sql.DB
+	db *sql.DB
 }
 
-func NewPlayService(Db *sql.DB) *PlayService {
-	return &PlayService{Db: Db}
+func NewPlayService(db *sql.DB) *PlayService {
+	return &PlayService{db: db}
 }
 
-func (service *PlayService) GetPlaysByUserId(userId uint) (*[]model.Play, error) {
-	return data.GetPlaysByUserId(userId, service.Db)
+func (service PlayService) GetPlaysByUserId(userId uint) (*[]model.Play, error) {
+	return data.GetPlaysByUserId(userId, service.db)
 }
 
-func (service *PlayService) GetAllPlays() (*[]model.Play, error) {
-	return data.GetAllPlays(service.Db)
+func (service PlayService) GetAllPlays() (*[]model.Play, error) {
+	return data.GetAllPlays(service.db)
 }
 
-func (service *PlayService) AddPlay(play *model.Play) error {
-	return data.AddPlay(play, service.Db)
+func (service PlayService) RegisterPlayRecord(user *model.User, record *model.PlayRecord) (*model.Play, error) {
+	play, err := service.CalculatePlayResults(user.Id, record)
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("RegisterPlayRecord.CalculatePlayResults: %w", err)
+	}
+	if err := data.AddPlay(play, service.db); err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("RegisterPlayRecord.data.AddPlay: %w", err)
+	}
+	return play, nil
 }
 
 func (service PlayService) CalculatePlayResults(userId uint, record *model.PlayRecord) (*model.Play, error) {
@@ -39,7 +48,7 @@ func (service PlayService) CalculatePlayResults(userId uint, record *model.PlayR
 		UserId:  userId,
 		QuoteId: record.QuoteId,
 	}
-	quote, err := data.GetQuote(record.QuoteId, service.Db)
+	quote, err := data.GetQuote(record.QuoteId, service.db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("CalculatePlayResults.data.GetQuote: %w", err)

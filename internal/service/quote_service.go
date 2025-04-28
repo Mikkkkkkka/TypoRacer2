@@ -21,14 +21,14 @@ func (service *QuoteService) GetAllQuotes() (*[]model.Quote, error) {
 	return data.GetAllQuotes(service.db)
 }
 
+func (service *QuoteService) GetQuote(id uint) (*model.Quote, error) {
+	return data.GetQuote(id, service.db)
+}
+
 func (service *QuoteService) GetRandomQuote() (*model.Quote, error) {
 	quotes, err := data.GetAllQuotes(service.db)
 	if err != nil {
 		return nil, fmt.Errorf("QuoteService.GetRandomQuote.data.GetAllQuotes: %w", err)
 	}
 	return &(*quotes)[rand.IntN(len(*quotes))], nil
-}
-
-func (service *QuoteService) GetQuote(id uint) (*model.Quote, error) {
-	return data.GetQuote(id, service.db)
 }

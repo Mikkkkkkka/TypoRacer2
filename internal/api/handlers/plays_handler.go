@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Mikkkkkkka/typoracer/internal/data"
 	"github.com/Mikkkkkkka/typoracer/internal/service"
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
@@ -14,37 +13,29 @@ import (
 const BEARER_PREFIX_LENGTH = 8
 
 type PlaysHandler struct {
-	service *service.PlayService
+	playService *service.PlayService
+	userService *service.UserService
 }
 
-func NewPlaysHandler(service *service.PlayService) *PlaysHandler {
-	return &PlaysHandler{service: service}
-}
-
-func (handler PlaysHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.Handle("/api/v1/plays", handler)
-}
-
-func (handler PlaysHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		handler.playsGetHandler(w, r)
-	case http.MethodPost:
-		handler.playsPostHandler(w, r)
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		log.Println("Method not allowed for api/v1/plays")
-		return
+func NewPlaysHandler(playService *service.PlayService, userService *service.UserService) *PlaysHandler {
+	return &PlaysHandler{
+		playService: playService,
+		userService: userService,
 	}
 }
 
+func (handler PlaysHandler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/v1/plays", handler.playsGetHandler)
+	mux.HandleFunc("POST /api/v1/plays", handler.playsPostHandler)
+}
+
 func (handler PlaysHandler) playsGetHandler(w http.ResponseWriter, r *http.Request) {
-	strUserId := r.URL.Query().Get("user_id")
+	strUserId := r.URL.Query().Get("userId")
 	if strUserId != "" {
 		handler.playsGetByUserIdHandler(strUserId, w)
 		return
 	}
-	plays, err := handler.service.GetAllPlays()
+	plays, err := handler.playService.GetAllPlays()
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -59,11 +50,11 @@ func (handler PlaysHandler) playsGetHandler(w http.ResponseWriter, r *http.Reque
 func (handler PlaysHandler) playsGetByUserIdHandler(strUserId string, w http.ResponseWriter) {
 	userId, err := strconv.ParseUint(strUserId, 10, 32)
 	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "Invalid user id format", http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
-	plays, err := handler.service.GetPlaysByUserId(uint(userId))
+	plays, err := handler.playService.GetPlaysByUserId(uint(userId))
 	if err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		log.Println(err)
@@ -85,26 +76,18 @@ func (handler PlaysHandler) playsPostHandler(w http.ResponseWriter, r *http.Requ
 	}
 	defer r.Body.Close()
 	token := r.Header.Get("Authorization")
-	user, err := data.GetUserFromToken(token[BEARER_PREFIX_LENGTH:], handler.service.Db)
+	user, err := handler.userService.AuthorizeUser(token)
 	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		log.Println(err)
 		return
 	}
-
-	play, err := handler.service.CalculatePlayResults(user.Id, &payloadData)
+	play, err := handler.playService.RegisterPlayRecord(user, &payloadData)
 	if err != nil {
-		http.Error(w, "Invalid quote id", http.StatusBadRequest)
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
-
-	if err := handler.service.AddPlay(play); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		log.Println(err)
-		return
-	}
-
 	if err := json.NewEncoder(w).Encode(play); err != nil {
 		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)

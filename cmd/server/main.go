@@ -54,7 +54,7 @@ func main() {
 	registerHandler := handlers.NewRegisterHandler(userService)
 	usersHandler := handlers.NewUsersHandler(userService)
 	quotesHandler := handlers.NewQuotesHandler(quoteService)
-	playsHandler := handlers.NewPlaysHandler(playService)
+	playsHandler := handlers.NewPlaysHandler(playService, userService)
 
 	mux := api.NewRouter(db)
 
