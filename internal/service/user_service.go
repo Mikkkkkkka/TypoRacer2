@@ -30,8 +30,8 @@ func generateToken() string {
 	return string(token)
 }
 
-func (service UserService) LoginUser(username, password string) (*model.User, error) {
-	user, err := data.GetUserWithoutTokenByUsername(username, service.db)
+func (service UserService) LoginUser(username, password string) (*string, error) {
+	user, err := data.GetUserByUsername(username, service.db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("LoginUser: no user with username \"%s\"", username)
@@ -41,7 +41,7 @@ func (service UserService) LoginUser(username, password string) (*model.User, er
 		token := generateToken()
 		expiration := time.Now().Add(15 * time.Minute)
 		if err = data.AddTokenToUser(token, expiration, user.Id, service.db); err == nil {
-			return data.GetUserById(user.Id, service.db)
+			return &token, nil
 		}
 	}
 
@@ -62,7 +62,11 @@ func (service UserService) AuthorizeUser(token string) (*model.User, error) {
 		log.Println(err)
 		return nil, fmt.Errorf("AuthorizeUser: no user with token")
 	}
-	if time.Now().After(user.TokenExpiration) {
+	expiration, err := data.GetTokenExpiration(token, service.db)
+	if err != nil {
+		return nil, fmt.Errorf("AuthorizeUser: %w", err)
+	}
+	if time.Now().After(expiration) {
 		log.Println("token has expired")
 		return nil, fmt.Errorf("AuthorizeUser: token has expired")
 	}

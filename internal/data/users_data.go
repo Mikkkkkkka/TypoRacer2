@@ -10,6 +10,12 @@ import (
 	"github.com/Mikkkkkkka/typoracer/pkg/model"
 )
 
+// Attempting to prevent sql-injections
+func isSecure(str string) bool {
+	const potentiallyUnsafe = ";\"[]() *"
+	return !strings.ContainsAny(str, potentiallyUnsafe)
+}
+
 func AddUser(username, password string, db *sql.DB) error {
 	if !isSecure(username) || !isSecure(password) {
 		log.Println("username or password contain insecure characters")
@@ -26,7 +32,7 @@ func AddUser(username, password string, db *sql.DB) error {
 func GetUserById(userId uint, db *sql.DB) (*model.User, error) {
 	var user model.User
 	err := db.QueryRow("SELECT id, username, password, token, token_expiration FROM users WHERE id=$1", userId).
-		Scan(&user.Id, &user.Username, &user.Password, &user.Token, &user.TokenExpiration)
+		Scan(&user.Id, &user.Username, &user.Password)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("GetUserById.db.QueryRow.Scan: %w", err)
@@ -34,18 +40,7 @@ func GetUserById(userId uint, db *sql.DB) (*model.User, error) {
 	return &user, nil
 }
 
-func GetUserWithoutTokenById(id uint, db *sql.DB) (*model.User, error) {
-	var user model.User
-	err := db.QueryRow("SELECT id, username, password FROM users WHERE id=$1", id).
-		Scan(&user.Id, &user.Username, &user.Password)
-	if err != nil {
-		log.Println(err)
-		return nil, fmt.Errorf("GetUserByUsername.db.QueryRow.Scan: %w", err)
-	}
-	return &user, nil
-}
-
-func GetUserWithoutTokenByUsername(username string, db *sql.DB) (*model.User, error) {
+func GetUserByUsername(username string, db *sql.DB) (*model.User, error) {
 	var user model.User
 	err := db.QueryRow("SELECT id, username, password FROM users WHERE username=$1", username).
 		Scan(&user.Id, &user.Username, &user.Password)
@@ -63,7 +58,7 @@ func GetUserFromToken(token string, db *sql.DB) (*model.User, error) {
 	}
 	var user model.User
 	err := db.QueryRow("SELECT id, username, password, token, token_expiration FROM users WHERE token=$1", token).
-		Scan(&user.Id, &user.Username, &user.Password, &user.Token, &user.TokenExpiration)
+		Scan(&user.Id, &user.Username, &user.Password)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("GetUserFromToken.db.QueryRow.Scan: %w", err)
@@ -80,8 +75,16 @@ func AddTokenToUser(token string, datetime time.Time, userId uint, db *sql.DB) e
 	return err
 }
 
-// Attempting to prevent sql-injections
-func isSecure(str string) bool {
-	const potentiallyUnsafe = ";\"[]() *"
-	return !strings.ContainsAny(str, potentiallyUnsafe)
+func GetTokenExpiration(token string, db *sql.DB) (time.Time, error) {
+	if !isSecure(token) {
+		log.Println("the generated token contains insecure characters")
+		return time.Now(), fmt.Errorf("GetTokenExpiration: the generated token contains insecure characters")
+	}
+	var expiration time.Time
+	err := db.QueryRow("SELECT token_expiration FROM users WHERE token=$1", token).
+		Scan(&expiration)
+	if err != nil {
+		return time.Now(), fmt.Errorf("GetTokenExpiration: %w", err)
+	}
+	return expiration, nil
 }

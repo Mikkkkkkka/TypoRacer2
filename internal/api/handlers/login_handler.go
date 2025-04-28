@@ -30,12 +30,12 @@ func (handler LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	user, err := handler.service.LoginUser(payloadData.Username, payloadData.Password)
+	token, err := handler.service.LoginUser(payloadData.Username, payloadData.Password)
 	if err != nil && err.Error() != "LoginUser: failed to generate token" {
 		http.Error(w, "Incorrect password or login", http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
 
-	w.Header().Add("Authorization", "Bearer: "+user.Token)
+	w.Header().Add("Authorization", "Bearer: "+*token)
 }
