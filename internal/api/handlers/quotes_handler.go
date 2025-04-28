@@ -18,15 +18,10 @@ func NewQuotesHandler(service *service.QuoteService) *QuotesHandler {
 }
 
 func (handler QuotesHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.Handle("/api/v1/quotes", handler)
+	mux.Handle("GET /api/v1/quotes", handler)
 }
 
 func (handler QuotesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		log.Println("Method not allowed for api/v1/quotes")
-		return
-	}
 
 	string_id := r.URL.Query().Get("id")
 	random := r.URL.Query().Get("random")
@@ -44,13 +39,13 @@ func (handler QuotesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (handler QuotesHandler) quoteIdHandler(string_id string, w http.ResponseWriter) {
 	id, err := strconv.ParseUint(string_id, 10, 32)
 	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "Invalid quote id format", http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
 	quote, err := handler.service.GetQuote(uint(id))
 	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "Quote with given id does not exist", http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
@@ -64,7 +59,7 @@ func (handler QuotesHandler) quoteIdHandler(string_id string, w http.ResponseWri
 func (handler QuotesHandler) quoteRandomHandler(w http.ResponseWriter) {
 	quote, err := handler.service.GetRandomQuote()
 	if err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "Unexpected error", http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
